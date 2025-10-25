@@ -228,6 +228,8 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │ + getPrecioConsulta(): double │
 └─────────────────────────────────┘
 
+```
+
 
 ### Enumeraciones
 ┌──────────────────────┐ ┌──────────────────────────┐
