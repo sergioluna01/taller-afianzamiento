@@ -198,37 +198,34 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 
 ### Diagrama de Clases
 
-```text
 ┌──────────────────────────────┐
-│          <<Cita>>            │
-│──────────────────────────────│
+│           <<Cita>>           │
+├──────────────────────────────┤
 │ - id: Long                   │
 │ - cedulaPaciente: String     │
 │ - medico: Medico             │
 │ - fecha: LocalDate           │
 │ - hora: LocalTime            │
 │ - estado: EstadoCita         │
-│──────────────────────────────│
+├──────────────────────────────┤
 │ + getters/setters()          │
 │ + calcularPrecio(): double   │
 └──────────────────────────────┘
-
-│
-│ 1
-▼
+           │
+           │ 1
+           ▼
 ┌─────────────────────────────────┐
-│ <<Medico>> │
+│           <<Medico>>            │
 ├─────────────────────────────────┤
-│ - id: Long │
-│ - nombre: String │
-│ - especialidad: Especialidad │
-│ - precioConsulta: double │
+│ - id: Long                      │
+│ - nombre: String                │
+│ - especialidad: Especialidad    │
+│ - precioConsulta: double        │
 ├─────────────────────────────────┤
-│ + getters/setters() │
-│ + getPrecioConsulta(): double │
+│ + getters/setters()             │
+│ + getPrecioConsulta(): double   │
 └─────────────────────────────────┘
 
-```
 
 
 ### Enumeraciones
