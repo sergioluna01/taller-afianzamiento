@@ -229,6 +229,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 
 
 ### Enumeraciones
+```
 ┌──────────────────────┐ ┌──────────────────────────┐
 │ <<enumeration>> │ │ <<enumeration>> │
 │ EstadoCita │ │ Especialidad │
@@ -238,7 +239,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │ • CANCELADA │ │ • CIRUJANO (120000) │
 │ • COMPLETADA │ │ • PEDIATRA (60000) │
 └──────────────────────┘ └──────────────────────────┘
-
+```
 
 
 ### Características Clave
@@ -258,6 +259,8 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
    - Manejo apropiado de conexiones
 
 ### Diagrama de Componentes
+
+```
 ┌─────────────────────────────────────────┐
 │        <<interface>> CitaDAO            │
 ├─────────────────────────────────────────┤
@@ -308,7 +311,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │ + listarPorEspecialidad(String): List   │
 │ + listarTodos(): List<Medico>           │
 └─────────────────────────────────────────┘
-
+```
 
 ### Características Clave
 
@@ -329,6 +332,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 
 ### Diagrama de Componentes
 
+```
 ┌─────────────────────────────────────────────────┐
 │            CitaService                          │
 │            @Stateless                           │
@@ -351,10 +355,11 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
     ┌──────────────┐      ┌──────────────┐
     │   CitaDAO    │      │  MedicoDAO   │
     └──────────────┘      └──────────────┘
-
+```
 
 ### Flujo del Método reservarCita()
 
+```
 1. ┌─────────────────────────────────────┐
    │ userTransaction.begin()             │
    │ Iniciar transacción                 │
@@ -395,7 +400,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
    │ return cita                         │
    │ Retornar objeto persistido          │
    └─────────────────────────────────────┘
-
+```
 
 
 
@@ -405,8 +410,10 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
    - Atributos del formulario con getters/setters
    - Método de acción `procesarReserva()`
 
+
 ### Diagrama de Componentes
 
+```
 ┌─────────────────────┐
 │  reservarCita.xhtml │
 │  (Vista JSF)        │
@@ -480,7 +487,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │ 6. Manejo de excepciones                     │
 │    catch → mensaje de error + return null    │
 └──────────────────────────────────────────────┘
-
+```
 
 
 
@@ -491,6 +498,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 
 ### Diagrama de Arquitectura
 
+```
 ┌─────────────────────────────────────────────────┐
 │         CitaController                          │
 │         @Named / @RequestScoped                 │
@@ -524,10 +532,12 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
     │ + reservarCita() │  │ + enviarRecordatorio │
     │ + confirmarCita()│  └──────────────────────┘
     └──────────────────┘
+```
 
 
 ### Flujo del Método reservarCitaConNotificacion()
 
+```
 ┌─────────────────────────────────────────────┐
 │ 1. Llamar citaService.reservarCita()        │
 │    → Crear y persistir la cita              │
@@ -558,11 +568,12 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │    - Rollback si es necesario               │
 │    - Log de errores                         │
 └─────────────────────────────────────────────┘
-
+```
 
 
 ### Estructura de Capas Implementada
 
+```
 ┌───────────────────────────────────────────────────┐
 │  PRESENTACIÓN (CitaController)                    │
 │  • JSF Managed Bean                               │
@@ -596,7 +607,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │  • Lógica de dominio                              │
 │  • Validaciones básicas                           │
 └───────────────────────────────────────────────────┘
-
+```
 
 
 ---
