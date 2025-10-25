@@ -197,7 +197,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
    - Incluya métodos de negocio donde corresponda
 
 ### Diagrama de Clases
-
+```
 ┌──────────────────────────────┐
 │           <<Cita>>           │
 ├──────────────────────────────┤
@@ -225,7 +225,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │ + getters/setters()             │
 │ + getPrecioConsulta(): double   │
 └─────────────────────────────────┘
-
+```
 
 
 ### Enumeraciones
