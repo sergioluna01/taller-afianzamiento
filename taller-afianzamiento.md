@@ -33,11 +33,12 @@
 
 | Aspecto | Escenario A | Escenario B | Escenario C |
 |---------|-------------|-------------|-------------|
-| Scope del Controller principal | | | |
-| ¿Necesita transacciones? ¿Por qué? | | | |
-| ¿Usar Facade? Justifique | | | |
-| Principal desafío de concurrencia | | | |
-| Patrón de persistencia más apropiado | | | |
+| Scope del Controller principal |@RequestScoped - Cada pedido es una operación independiente que se completa en una sola petición | @ApplicationScoped - Las noticias se comparten entre todos los usuarios y no cambian frecuentemente|@SessionScoped o @ConversationScoped - Se necesita mantener el estado del proceso de matrícula mientras el estudiante navega entre los 5 pasos |
+| ¿Necesita transacciones? ¿Por qué? |Sí, definitivamente. Hay que asegurar que la validación de inventario, creación del pedido, registro de ítems y auditoría se hagan como una sola unidad. Si algo falla, todo debe revertirse | Parcialmente. Solo al publicar noticias nuevas o actualizar contadores de visitas. La lectura no requiere transacciones|Sí, al finalizar. Aunque el usuario navegue entre pasos, la transacción se necesita al confirmar la matrícula para validar cupos y guardar todo junto, evitando inconsistencias |
+| ¿Usar Facade? Justifique | Sí. El proceso involucra múltiples entidades (Pedido, Items, Inventario, Auditoría) y lógica de negocio. Un Facade coordinaría todo esto y simplificaría el controller| No necesariamente. La operación de lectura es simple y directa. Tal vez solo para la parte administrativa de publicación, pero no es necesario|Sí. El proceso de matrícula es complejo, involucra validación de prerrequisitos, verificación de cupos, y múltiples pasos. Un Facade ayudaría a encapsular toda esa lógica |
+| Principal desafío de concurrencia | Control de inventario. Múltiples usuarios pueden intentar comprar el mismo producto simultáneamente. Se necesita locking optimista o pesimista para evitar sobreventa| Contador de visitas. Miles de usuarios leyendo al mismo tiempo pueden generar conflictos al incrementar el contador. Necesita manejo adecuado de concurrencia en las actualizaciones|Cupos disponibles. Varios estudiantes pueden intentar inscribirse en el mismo curso al mismo tiempo cuando quedan pocos cupos. Similar al inventario pero más crítico por ventanas de tiempo limitadas |
+| Patrón de persistencia más apropiado |DAO con Repository. Se necesita acceso complejo a múltiples entidades con "queries" específicas para validaciones de inventario y reportes | DAO simple con caché. Las lecturas son frecuentes y los datos no cambian mucho, así que usar caché de segundo nivel de JPA mejoraría el rendimiento considerablemente| DAO con Repository. Necesita queries complejas para validar prerrequisitos, buscar cursos disponibles, y verificar conflictos de horarios entre los cursos seleccionados
+|
 
 ### Actividad 2: Depuración de Código Problemático (15 minutos)
 
