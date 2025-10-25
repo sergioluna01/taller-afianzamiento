@@ -197,19 +197,22 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
    - Incluya métodos de negocio donde corresponda
 
 ### Diagrama de Clases
-┌─────────────────────────────────┐
-│ <<Cita>> │
-├─────────────────────────────────┤
-│ - id: Long │
-│ - cedulaPaciente: String │
-│ - medico: Medico │
-│ - fecha: LocalDate │
-│ - hora: LocalTime │
-│ - estado: EstadoCita │
-├─────────────────────────────────┤
-│ + getters/setters() │
-│ + calcularPrecio(): double │
-└─────────────────────────────────┘
+
+```text
+┌──────────────────────────────┐
+│          <<Cita>>            │
+│──────────────────────────────│
+│ - id: Long                   │
+│ - cedulaPaciente: String     │
+│ - medico: Medico             │
+│ - fecha: LocalDate           │
+│ - hora: LocalTime            │
+│ - estado: EstadoCita         │
+│──────────────────────────────│
+│ + getters/setters()          │
+│ + calcularPrecio(): double   │
+└──────────────────────────────┘
+
 │
 │ 1
 ▼
