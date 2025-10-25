@@ -182,12 +182,72 @@ public class ReservaCitaServlet extends HttpServlet {
 
 #### Tareas de Refactorización:
 
+## Problema Original
+
+El sistema original presentaba un diseño monolítico concentrado en un solo servlet de más de 80 líneas, lo que generaba una alta dependencia entre componentes y dificultaba el mantenimiento. Este servlet mezclaba diferentes responsabilidades como la lógica de presentación (manejo de `request` y `response`), la lógica de negocio (validaciones y cálculos), y el acceso directo a datos mediante consultas SQL. Además, no hacía uso de un pool de conexiones ni aplicaba un manejo transaccional adecuado, lo que incrementaba el riesgo de errores y afectaba la escalabilidad.
+
+## Solución: Arquitectura en Capas
+
+Para resolver estas deficiencias se implementó una refactorización basada en una arquitectura en capas, separando las responsabilidades en cuatro niveles principales: presentación, servicio, persistencia y modelo. Esta estructura mejora la mantenibilidad, facilita la reutilización del código, permite un control transaccional más seguro y reduce el acoplamiento entre componentes, logrando un sistema más modular y escalable.
+
+
 **1. Capa de Modelo (JavaBeans)** - Cree las clases necesarias:
    - `Cita` con todos sus atributos
    - `Medico` con especialidad
    - Incluya métodos de negocio donde corresponda
 
-   
+### Diagrama de Clases
+┌─────────────────────────────────┐
+│ <<Cita>> │
+├─────────────────────────────────┤
+│ - id: Long │
+│ - cedulaPaciente: String │
+│ - medico: Medico │
+│ - fecha: LocalDate │
+│ - hora: LocalTime │
+│ - estado: EstadoCita │
+├─────────────────────────────────┤
+│ + getters/setters() │
+│ + calcularPrecio(): double │
+└─────────────────────────────────┘
+│
+│ 1
+▼
+┌─────────────────────────────────┐
+│ <<Medico>> │
+├─────────────────────────────────┤
+│ - id: Long │
+│ - nombre: String │
+│ - especialidad: Especialidad │
+│ - precioConsulta: double │
+├─────────────────────────────────┤
+│ + getters/setters() │
+│ + getPrecioConsulta(): double │
+└─────────────────────────────────┘
+
+
+### Enumeraciones
+┌──────────────────────┐ ┌──────────────────────────┐
+│ <<enumeration>> │ │ <<enumeration>> │
+│ EstadoCita │ │ Especialidad │
+├──────────────────────┤ ├──────────────────────────┤
+│ • RESERVADA │ │ • GENERAL (50000) │
+│ • CONFIRMADA │ │ • ESPECIALISTA (80000) │
+│ • CANCELADA │ │ • CIRUJANO (120000) │
+│ • COMPLETADA │ │ • PEDIATRA (60000) │
+└──────────────────────┘ └──────────────────────────┘
+
+
+
+### Características Clave
+
+- **Cita:** Contiene los métodos de negocio para calcular el precio de la consulta según la especialidad del médico asociado.  
+- **Medico:** Encapsula los atributos del médico y su especialidad, permitiendo obtener el precio correspondiente a su tipo de consulta.  
+- **Enumeraciones:** Definen de forma controlada los estados válidos de una cita y las especialidades médicas con sus precios asociados.  
+- **Serializable:** Todas las clases implementan la interfaz `Serializable` para facilitar el manejo de sesión y la persistencia de objetos.
+
+
+
 
 **2. Capa de Persistencia (DAO)** - Implemente:
    - `CitaDAO` con métodos: `guardar()`, `verificarDisponibilidad()`
@@ -195,11 +255,147 @@ public class ReservaCitaServlet extends HttpServlet {
    - Use `@Resource` para el DataSource
    - Manejo apropiado de conexiones
 
+### Diagrama de Componentes
+┌─────────────────────────────────────────┐
+│        <<interface>> CitaDAO            │
+├─────────────────────────────────────────┤
+│ + guardar(cita: Cita): void             │
+│ + verificarDisponibilidad(              │
+│     medico: Long,                       │
+│     fecha: LocalDate,                   │
+│     hora: LocalTime): boolean           │
+│ + obtenerPorId(id: Long): Cita          │
+│ + listarPorPaciente(String): List<Cita> │
+└─────────────────────────────────────────┘
+                    △
+                    │ implements
+                    │
+┌─────────────────────────────────────────┐
+│       CitaDAOImpl                       │
+│       @Stateless                        │
+├─────────────────────────────────────────┤
+│ - ds: DataSource                        │
+│   @Resource(lookup="java:/jdbc/...")    │
+├─────────────────────────────────────────┤
+│ + guardar(cita: Cita): void             │
+│ + verificarDisponibilidad(...): boolean │
+│ + obtenerPorId(id: Long): Cita          │
+│ + listarPorPaciente(String): List       │
+│ - getConnection(): Connection           │
+│ - closeResources(...): void             │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│       <<interface>> MedicoDAO           │
+├─────────────────────────────────────────┤
+│ + obtenerPorId(id: Long): Medico        │
+│ + listarPorEspecialidad(String): List   │
+│ + listarTodos(): List<Medico>           │
+└─────────────────────────────────────────┘
+                    △
+                    │ implements
+                    │
+┌─────────────────────────────────────────┐
+│       MedicoDAOImpl                     │
+│       @Stateless                        │
+├─────────────────────────────────────────┤
+│ - ds: DataSource                        │
+│   @Resource(lookup="java:/jdbc/...")    │
+├─────────────────────────────────────────┤
+│ + obtenerPorId(id: Long): Medico        │
+│ + listarPorEspecialidad(String): List   │
+│ + listarTodos(): List<Medico>           │
+└─────────────────────────────────────────┘
+
+
+### Características Clave
+
+**@Stateless:** EJBs sin estado para alta concurrencia.  
+**@Resource:** Inyección automática del `DataSource` desde el servidor.  
+**Connection Pool:** Uso eficiente de conexiones mediante `DataSource`.  
+**Try-with-resources:** Cierre automático de recursos (`Connection`, `Statement`, `ResultSet`).  
+**PreparedStatement:** Prevención de ataques **SQL Injection**.
+
+
+
+
 **3. Capa de Servicio (Service)** - Implemente:
    - `CitaService` con método `reservarCita()`
    - Use `@Inject` para inyectar DAOs
    - Implemente manejo transaccional con `UserTransaction`
    - Método para calcular precio según especialidad
+
+### Diagrama de Componentes
+
+┌─────────────────────────────────────────────────┐
+│            CitaService                          │
+│            @Stateless                           │
+├─────────────────────────────────────────────────┤
+│ - citaDAO: CitaDAO           @Inject            │
+│ - medicoDAO: MedicoDAO       @Inject            │
+│ - userTransaction: UserTransaction @Resource    │
+├─────────────────────────────────────────────────┤
+│ + reservarCita(                                 │
+│     cedulaPaciente: String,                     │
+│     idMedico: Long,                             │
+│     fecha: LocalDate,                           │
+│     hora: LocalTime): Cita                      │
+│ + calcularPrecio(medico: Medico): double        │
+│ + confirmarCita(idCita: Long): void             │
+└─────────────────────────────────────────────────┘
+              │                    │
+              │ @Inject            │ @Inject
+              ▼                    ▼
+    ┌──────────────┐      ┌──────────────┐
+    │   CitaDAO    │      │  MedicoDAO   │
+    └──────────────┘      └──────────────┘
+
+
+### Flujo del Método reservarCita()
+
+1. ┌─────────────────────────────────────┐
+   │ userTransaction.begin()             │
+   │ Iniciar transacción                 │
+   └─────────────────────────────────────┘
+                  ↓
+2. ┌─────────────────────────────────────┐
+   │ medicoDAO.obtenerPorId(idMedico)    │
+   │ Obtener datos del médico            │
+   └─────────────────────────────────────┘
+                  ↓
+3. ┌─────────────────────────────────────┐
+   │ citaDAO.verificarDisponibilidad()   │
+   │ Verificar horario disponible        │
+   └─────────────────────────────────────┘
+                  ↓
+4. ┌─────────────────────────────────────┐
+   │ ¿Disponible?                        │
+   │   NO → rollback() + Exception       │
+   │   SÍ → Continuar                    │
+   └─────────────────────────────────────┘
+                  ↓
+5. ┌─────────────────────────────────────┐
+   │ Crear objeto Cita                   │
+   │ Calcular precio                     │
+   └─────────────────────────────────────┘
+                  ↓
+6. ┌─────────────────────────────────────┐
+   │ citaDAO.guardar(cita)               │
+   │ Persistir en BD                     │
+   └─────────────────────────────────────┘
+                  ↓
+7. ┌─────────────────────────────────────┐
+   │ userTransaction.commit()            │
+   │ Confirmar transacción               │
+   └─────────────────────────────────────┘
+                  ↓
+8. ┌─────────────────────────────────────┐
+   │ return cita                         │
+   │ Retornar objeto persistido          │
+   └─────────────────────────────────────┘
+
+
+
 
 **4. Capa de Presentación (Managed Bean)** - Implemente:
    - `CitaController` con scope apropiado
@@ -207,9 +403,199 @@ public class ReservaCitaServlet extends HttpServlet {
    - Atributos del formulario con getters/setters
    - Método de acción `procesarReserva()`
 
+### Diagrama de Componentes
+
+┌─────────────────────┐
+│  reservarCita.xhtml │
+│  (Vista JSF)        │
+├─────────────────────┤
+│ • h:inputText       │
+│ • h:commandButton   │
+│ • h:message         │
+└─────────────────────┘
+           │
+           │ binding
+           ▼
+┌─────────────────────────────────────────┐
+│       CitaController                    │
+│       @Named("citaController")          │
+│       @RequestScoped                    │
+├─────────────────────────────────────────┤
+│ - citaService: CitaService  @Inject     │
+│                                         │
+│ // Atributos del formulario            │
+│ - cedulaPaciente: String                │
+│ - idMedico: Long                        │
+│ - fecha: LocalDate                      │
+│ - hora: LocalTime                       │
+│ - mensaje: String                       │
+│ - citaReservada: Cita                   │
+├─────────────────────────────────────────┤
+│ + procesarReserva(): String             │
+│ + getters/setters()                     │
+│ + init() @PostConstruct                 │
+└─────────────────────────────────────────┘
+           │
+           │ @Inject
+           ▼
+┌─────────────────────┐
+│   CitaService       │
+│   @Stateless        │
+└─────────────────────┘
+
+
+### Flujo del Método procesarReserva()
+
+┌──────────────────────────────────────────────┐
+│ 1. Validar datos del formulario             │
+│    - Campos requeridos                       │
+│    - Formato de fecha/hora                   │
+│    - Cédula válida                           │
+└──────────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────────┐
+│ 2. Llamar citaService.reservarCita()         │
+│    con todos los parámetros                  │
+└──────────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────────┐
+│ 3. Capturar objeto Cita retornado            │
+│    citaReservada = resultado                 │
+└──────────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────────┐
+│ 4. Establecer mensaje de éxito               │
+│    "Cita reservada. Total: $" + precio       │
+└──────────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────────┐
+│ 5. Retornar navegación                       │
+│    - null: quedarse en página                │
+│    - "confirmacion": ir a confirmación       │
+└──────────────────────────────────────────────┘
+                    ↓
+┌──────────────────────────────────────────────┐
+│ 6. Manejo de excepciones                     │
+│    catch → mensaje de error + return null    │
+└──────────────────────────────────────────────┘
+
+
+
+
 **5. Patrón Facade (Opcional - Bonus)** - Implemente:
    - `ClinicaFacade` que coordine reservar cita Y enviar email de confirmación
    - Debe inyectar `CitaService` y `NotificacionService`
+
+
+### Diagrama de Arquitectura
+
+┌─────────────────────────────────────────────────┐
+│         CitaController                          │
+│         @Named / @RequestScoped                 │
+└─────────────────────────────────────────────────┘
+                      │
+                      │ usa
+                      ▼
+┌─────────────────────────────────────────────────┐
+│         <<Facade>>                              │
+│         ClinicaFacade                           │
+│         @Stateless                              │
+├─────────────────────────────────────────────────┤
+│ - citaService: CitaService          @Inject     │
+│ - notificacionService: NotificationService      │
+│                                     @Inject     │
+├─────────────────────────────────────────────────┤
+│ + reservarCitaConNotificacion(...)              │
+│     → Orquesta múltiples servicios              │
+└─────────────────────────────────────────────────┘
+              │                    │
+              │ @Inject            │ @Inject
+              ▼                    ▼
+    ┌──────────────────┐  ┌──────────────────────┐
+    │  CitaService     │  │ NotificacionService  │
+    │  @Stateless      │  │ @Stateless           │
+    ├──────────────────┤  ├──────────────────────┤
+    │ - citaDAO        │  │ - mailSession        │
+    │ - medicoDAO      │  │   @Resource          │
+    │ - userTx         │  ├──────────────────────┤
+    ├──────────────────┤  │ + enviarConfirmacion │
+    │ + reservarCita() │  │ + enviarRecordatorio │
+    │ + confirmarCita()│  └──────────────────────┘
+    └──────────────────┘
+
+
+### Flujo del Método reservarCitaConNotificacion()
+
+┌─────────────────────────────────────────────┐
+│ 1. Llamar citaService.reservarCita()        │
+│    → Crear y persistir la cita              │
+└─────────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ 2. ¿Reserva exitosa?                        │
+│    NO → Lanzar excepción                    │
+│    SÍ → Continuar                           │
+└─────────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ 3. Obtener email del paciente               │
+│    (de BD o servicio externo)               │
+└─────────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ 4. Llamar notificacionService               │
+│    .enviarConfirmacionCita(cita, email)     │
+└─────────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ 5. Retornar cita reservada                  │
+└─────────────────────────────────────────────┘
+                  ↓
+┌─────────────────────────────────────────────┐
+│ 6. Manejo de excepciones                    │
+│    - Rollback si es necesario               │
+│    - Log de errores                         │
+└─────────────────────────────────────────────┘
+
+
+
+### Estructura de Capas Implementada
+
+┌───────────────────────────────────────────────────┐
+│  PRESENTACIÓN (CitaController)                    │
+│  • JSF Managed Bean                               │
+│  • Validación de entrada                          │
+│  • Navegación                                     │
+└───────────────────────────────────────────────────┘
+                      ↓ @Inject
+┌───────────────────────────────────────────────────┐
+│  FACADE (ClinicaFacade) - OPCIONAL                │
+│  • Coordina múltiples servicios                   │
+│  • Operaciones complejas de negocio               │
+└───────────────────────────────────────────────────┘
+                      ↓ @Inject
+┌───────────────────────────────────────────────────┐
+│  SERVICIO (CitaService)                           │
+│  • Lógica de negocio                              │
+│  • Manejo transaccional (UserTransaction)         │
+│  • Validaciones de negocio                        │
+└───────────────────────────────────────────────────┘
+                      ↓ @Inject
+┌───────────────────────────────────────────────────┐
+│  PERSISTENCIA (CitaDAO, MedicoDAO)                │
+│  • CRUD operations                                │
+│  • Consultas SQL                                  │
+│  • Gestión de conexiones                          │
+└───────────────────────────────────────────────────┘
+                      ↓ usa
+┌───────────────────────────────────────────────────┐
+│  MODELO (Cita, Medico, Enums)                     │
+│  • Entidades de dominio                           │
+│  • Lógica de dominio                              │
+│  • Validaciones básicas                           │
+└───────────────────────────────────────────────────┘
+
+
 
 ---
 
