@@ -230,15 +230,16 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 
 ### Enumeraciones
 ```
-┌──────────────────────┐ ┌──────────────────────────┐
-│ <<enumeration>> │ │ <<enumeration>> │
-│ EstadoCita │ │ Especialidad │
-├──────────────────────┤ ├──────────────────────────┤
-│ • RESERVADA │ │ • GENERAL (50000) │
-│ • CONFIRMADA │ │ • ESPECIALISTA (80000) │
-│ • CANCELADA │ │ • CIRUJANO (120000) │
-│ • COMPLETADA │ │ • PEDIATRA (60000) │
-└──────────────────────┘ └──────────────────────────┘
+┌──────────────────────────────┐       ┌────────────────────────────────┐
+│       <<enumeration>>        │       │        <<enumeration>>         │
+│          EstadoCita          │       │         Especialidad           │
+├──────────────────────────────┤       ├────────────────────────────────┤
+│ • RESERVADA                 │       │ • GENERAL (50000)              │
+│ • CONFIRMADA                │       │ • ESPECIALISTA (80000)         │
+│ • CANCELADA                 │       │ • CIRUJANO (120000)            │
+│ • COMPLETADA                │       │ • PEDIATRA (60000)             │
+└──────────────────────────────┘       └────────────────────────────────┘
+
 ```
 
 
