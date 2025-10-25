@@ -623,21 +623,22 @@ Complete la siguiente tabla comparativa entre Java EE CDI, Spring y PrimeFaces:
 
 | Concepto | Java EE / CDI | Spring / Spring Boot | PrimeFaces + CDI |
 |----------|---------------|----------------------|------------------|
-| Anotación para inyección | `@Inject` | | |
-| Anotación para bean de sesión | `@SessionScoped` | | |
-| Anotación para bean de request | `@RequestScoped` | | |
-| Anotación para singleton | `@ApplicationScoped` | | |
-| Componente de servicio | `@Stateless` o CDI bean | | N/A |
-| Transacciones declarativas | `@Transactional` (JTA) | | |
-| Configuración | `beans.xml` | | |
-| Managed Bean para vista | CDI Managed Bean | | |
+| Anotación para inyección |`@Inject`|`@Autowired` o `@Inject`|`@Inject `|
+| Anotación para bean de sesión | `@SessionScoped` | `@SessionScope`  |`@SessionScoped`|
+| Anotación para bean de request | `@RequestScoped` | `@RequestScope` | `@RequestScoped` |
+| Anotación para singleton | `@ApplicationScoped` |`@Singleton` o `@Component` |`@ApplicationScoped`|
+| Componente de servicio | `@Stateless` o CDI bean |`@Service`| N/A |
+| Transacciones declarativas | `@Transactional` (JTA) | `@Transactional` |N/A se delega al servicio CDI|
+| Configuración | `beans.xml` |`@Configuration` + `application.properties/YAML` |`beans.xml` |
+| Managed Bean para vista | CDI Managed Bean `@Named` | `@Controller`|`@Named + @ViewScoped` |
 
 **Investigue y complete:**
-- Spring Boot usa `@Autowired` o `@Inject` para inyección
-- Spring Boot scope equivalente: `@RequestScope`, `@SessionScope`, `@ApplicationScope`
-- Spring Boot usa `@Service` para servicios
-- PrimeFaces trabaja con los mismos managed beans CDI de JSF
-- PrimeFaces scope especial: `@ViewScoped` (de JSF)
+- Spring Boot usa `@Autowired` o `@Inject` 
+- Spring Boot scope equivalente: `@RequestScope`, `@SessionScope`, `@ApplicationScope` 
+- Spring Boot usa `@Service` para servicios 
+- PrimeFaces trabaja con los mismos managed beans CDI de JSF. Rta: Si, PrimeFaces no define sus propios beans, usa los mismos managed beans de CDI/JSF.
+- PrimeFaces scope especial: `@ViewScoped` (de JSF). Rta: Permite mantener el estado mientras el usuario permanece en la misma vista.
+
 
 #### Actividad 4: De Java EE a Spring Boot
 
@@ -682,32 +683,71 @@ public class ProductoService {
 public class ProductoController {
     
     // ¿Qué anotación usar para inyección?
+    @Autowired o @Injection // Inyección de dependencias de Spring 
     private ProductoService productoService;
     
     // ¿Cómo manejar la inicialización?
-    
+    @PostConstruct // Método que se ejecuta después de la construcción del bean y la inyección de dependencias
+    public void init() {
+        productos = productoService.listarTodos();
+    }
     
     // Complete los métodos
+
+    @GetMapping("/productos") // Mapea peticiones GET a /productos
+    @ResponseBody // Indica que el retorno se serializa directamente en el cuerpo de la respuesta
+    public List<Producto> listarProductos(Model model) {
+        List<Producto> productos = productoService.listarTodos();
+        model.addAttribute("productos", productos); // Agrega la lista al modelo para la vista
+        return productos;
+    
 }
 
+
+
 // ¿Qué anotación usar para el servicio?
+@Service // Marca la clase como un componente de servicio de Spring (capa de lógica de negocio)
 public class ProductoService {
     
     // ¿Cómo inyectar el repository?
+    @Autowired o @Injection // Inyección de dependencias de Sprin
     private ProductoRepository productoRepository;
     
     public List<Producto> listarTodos() {
         // En Spring Boot con JPA
-        return productoRepository.findAll();
+        return productoRepository.findAll(); // Spring Data JPA proporciona este método automáticamente
     }
 }
 ```
 
 **Preguntas guía:**
-1. ¿Qué equivale `@Inject` en Spring?
-2. ¿Qué equivale `@Stateless` en Spring?
-3. ¿Cómo se declara un Repository en Spring Boot?
-4. ¿Qué ventajas tiene Spring Boot sobre Java EE tradicional?
+1. ¿Qué equivale `@Inject` en Spring? Rta: En Spring, el equivalente a @Inject de Java EE CDI es @Autowired, aunque ambas anotaciones (@Inject y @Autowired) funcionan en Spring Boot. 
+2. ¿Qué equivale `@Stateless` en Spring? Rta: En Spring, el equivalente a @Stateless de Java EE es @Service.
+3. ¿Cómo se declara un Repository en Spring Boot? Rta: En Spring Boot se declara como una interfaz que extiende de JpaRepository u otros tipos de Repositorios. 
+Ejemplo:
+```
+@Repository  // 
+public interface ProductoRepository extends JpaRepository<Producto, Long> {
+    // Spring Data JPA genera automáticamente la implementación.
+    // Algunos metodos disponibles findAll(), save(), deleteById(), etc.
+}
+```
+4. ¿Qué ventajas tiene Spring Boot sobre Java EE tradicional? 
+Rta: 
+-Spring Boot tiene una configuración más simplificada.
+-Tiene servidor embebido, Tomcat o Jetty ya incluido.
+-Desarrollo más ágil: 
+-Auto-configuración: 
+    Spring Boot configura automáticamente beans según las dependencias
+    Spring Boot DevTools: Recarga automática durante desarrollo
+    Starters: Dependencias preconfiguradas
+
+| Característica | Java EE Tradicional | Spring Boot |
+|----------------|---------------------|-------------|
+| Configuración | XML mas extenso | application.properties mas simple|
+| Servidor | Externo (pesado y más complejo de configurar) | Embebido  |
+| Tiempo de inicio | Puede resultar un poco más lento | Es más rápido |
+| Microservicios | Complejo | Nativo |
 
 ### Sección B: Introducción a PrimeFaces (20 minutos)
 
