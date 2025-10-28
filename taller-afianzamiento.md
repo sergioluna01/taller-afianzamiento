@@ -105,8 +105,32 @@ public class TransferenciaService {
 
 **Preguntas:**
 1. ¿Qué scope debería tener el CarritoComprasController? ¿Por qué?
+
+    El CarritoComprasController debería tener @SessionScoped porque el carrito de compras debe persistir durante toda la sesión del usuario mientras navega por el sitio, agrega productos, revisa el carrito, etc. Solo se debe limpiar cuando finalice la compra o cierre sesión.
+
 2. ¿Qué le falta al TransferenciaService para garantizar atomicidad?
+
+    Le falta la anotación @Transactional para garantizar atomicidad.Con @Transactional, si algo falla entre las dos actualizaciones, todo se revierte automáticamente (rollback). Es como un "todo o nada".
+
 3. ¿Qué violaciones arquitectónicas tiene el JSP? Proponga una solución.
+
+- Lógica de acceso a datos en la vista: El JSP está creando conexiones JDBC y ejecutando queries directamente. Esto debería estar en un DAO.
+
+- Lógica de negocio en la vista: La regla de "saldo mayor a 1 millón = VIP" es lógica de negocio y debería estar en un Service o en la entidad Cliente.
+
+- No cierra recursos: lo que genera fugas de memoria y conexiones abiertas.
+
+- Usa scriptlets: El código Java en el JSP es mala práctica. Debería usar JSTL.
+
+### Solución:
+
+Mover la conexión y consulta SQL a un ClienteDAO que use JPA.
+
+Crear un ClienteService que llame al DAO y maneje la lógica de negocio.
+
+Hacer un Controller que inyecte el service, reciba la cédula y guarde el cliente consultado.
+
+El JSP solo debe mostrar los datos usando Expression Language, sin código Java ni lógica.
 
 ---
 
@@ -234,10 +258,10 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 │       <<enumeration>>        │       │        <<enumeration>>         │
 │          EstadoCita          │       │         Especialidad           │
 ├──────────────────────────────┤       ├────────────────────────────────┤
-│ • RESERVADA                 │       │ • GENERAL (50000)              │
-│ • CONFIRMADA                │       │ • ESPECIALISTA (80000)         │
-│ • CANCELADA                 │       │ • CIRUJANO (120000)            │
-│ • COMPLETADA                │       │ • PEDIATRA (60000)             │
+│ • RESERVADA                  │       │ • GENERAL (50000)              │
+│ • CONFIRMADA                 │       │ • ESPECIALISTA (80000)         │
+│ • CANCELADA                  │       │ • CIRUJANO (120000)            │
+│ • COMPLETADA                 │       │ • PEDIATRA (60000)             │
 └──────────────────────────────┘       └────────────────────────────────┘
 
 ```
@@ -433,7 +457,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 ├─────────────────────────────────────────┤
 │ - citaService: CitaService  @Inject     │
 │                                         │
-│ // Atributos del formulario            │
+│ // Atributos del formulario             │
 │ - cedulaPaciente: String                │
 │ - idMedico: Long                        │
 │ - fecha: LocalDate                      │
@@ -457,7 +481,7 @@ Para resolver estas deficiencias se implementó una refactorización basada en u
 ### Flujo del Método procesarReserva()
 
 ┌──────────────────────────────────────────────┐
-│ 1. Validar datos del formulario             │
+│ 1. Validar datos del formulario              │
 │    - Campos requeridos                       │
 │    - Formato de fecha/hora                   │
 │    - Cédula válida                           │
