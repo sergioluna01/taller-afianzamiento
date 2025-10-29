@@ -1,5 +1,4 @@
 
-<div align="center">
 
 # UNIDADES TECNOLÓGICAS DE SANTANDER. 
 ## DESARROLLO DE SISTEMAS INFORMÁTICOS.
@@ -35,7 +34,7 @@ Profesor: Genner Carrillo.
 
 ---
 
-</div>
+
 
 
 
