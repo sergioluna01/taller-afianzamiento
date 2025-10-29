@@ -1,3 +1,45 @@
+
+<div align="center">
+
+# UNIDADES TECNOLÓGICAS DE SANTANDER. 
+## DESARROLLO DE SISTEMAS INFORMÁTICOS.
+
+---
+
+### DESARROLLO DE APLICACIONES EMPRESARIALES E191P
+
+---
+
+## Taller de Afianzamiento
+
+---
+
+**Presentado por:**
+
+Juan Manuel Hernández Sánchez. 
+Sergio Ivan Luna Rojas.
+Jose Luis Ordoñez Díaz.
+
+
+---
+
+
+Profesor: Genner Carrillo.
+
+---
+
+
+
+**Fecha:**  
+28 de octubre de 2025.
+
+---
+
+</div>
+
+
+
+
 # TALLER DE AFIANZAMIENTO: ARQUITECTURA EMPRESARIAL Y TRANSICIÓN A FRAMEWORKS MODERNOS
 
 
