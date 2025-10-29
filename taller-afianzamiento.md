@@ -1111,7 +1111,7 @@ Rta:
 ```
 ---
 ## 1.6 Capa de Vistas (JSP/PrimeFaces)
-```
+
 | Vista | Descripción |
 |-------|-------------|
 | **login.xhtml** | Formulario de autenticación |
@@ -1122,7 +1122,7 @@ Rta:
 | **checkout-paso2.xhtml** | Selección de método de pago |
 | **checkout-paso3.xhtml** | Confirmación del pedido |
 | **confirmacion.xhtml** | Página de confirmación de compra |
-```
+
 ---
 
 ### 2. Scopes de cada Managed Bean:
