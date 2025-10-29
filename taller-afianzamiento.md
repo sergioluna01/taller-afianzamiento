@@ -1109,8 +1109,238 @@ Rta:
 │ + confirmarPedido()          │
 └──────────────────────────────┘
 ```
+
+## 1.7 Diagrama de Componentes 
+```
+┌────────────────────────────────────────────────────────────────────┐
+│                      CAPA DE PRESENTACIÓN                          │
+│                                                                    │
+│  [login.xhtml]  [catalogo.xhtml]  [carrito.xhtml]  [checkout.xhtml]│
+│                                                                    │
+│                    [PrimeFaces Components]                         │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────┴─────────────────────────────────────┐
+│                      CAPA DE CONTROLADORES                         │
+│                                                                    │
+│  [LoginController]  [ProductoCatalogoController]                   │
+│  [CarritoComprasController]  [CheckoutMultipasoController]         │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────┴─────────────────────────────────────┐
+│                         CAPA FACADE                                │
+│                                                                    │
+│                    [EcommerceFacade]                               │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────┴─────────────────────────────────────┐
+│                      CAPA DE SERVICIOS                             │
+│                                                                    │
+│  [UsuarioService]    [ProductoService]    [InventarioService]      │
+│  [PedidoService]     [PagoService]                                 │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────┴─────────────────────────────────────┐
+│                          CAPA DAO                                  │
+│                                                                    │
+│  [UsuarioDAO]  [ProductoDAO]  [PedidoDAO]  [PagoDAO]               │
+└──────────────────────────────┬─────────────────────────────────────┘
+                               │
+┌──────────────────────────────┴─────────────────────────────────────┐
+│                    CAPA DE PERSISTENCIA                            │
+│                                                                    │
+│                      [JPA/Hibernate]                               │
+│                           │                                        │
+│                   [Base de Datos]                                  │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+## 1.8 Diagrama de Flujo - Proceso de Compra
+```
+                         INICIO
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │ Usuario Inicia │
+                  │     Sesión     │
+                  └────────┬───────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │ Navegar Catálogo│
+                  │  de Productos  │
+                  └────────┬───────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │ Seleccionar    │
+                  │   Producto     │
+                  └────────┬───────┘
+                           │
+                           ▼
+                  ┌────────────────┐
+                  │ ¿Stock         │
+                  │ Disponible?    │
+                  └────┬───────┬───┘
+                       │       │
+                   NO  │       │ SÍ
+                       │       │
+                       ▼       ▼
+              ┌─────────┐  ┌────────────┐
+              │ Mostrar │  │  Agregar   │
+              │  Error  │  │ al Carrito │
+              └────┬────┘  └─────┬──────┘
+                   │             │
+                   │             ▼
+                   │    ┌────────────────┐
+                   │    │ ¿Continuar     │
+                   │    │  Comprando?    │
+                   │    └────┬───────┬───┘
+                   │         │       │
+                   │     SÍ  │       │ NO
+                   │         │       │
+                   └─────────┘       ▼
+                                ┌──────────────┐
+                                │   Ver        │
+                                │   Carrito    │
+                                └──────┬───────┘
+                                       │
+                                       ▼
+                                ┌──────────────┐
+                                │  Proceder al │
+                                │   Checkout   │
+                                └──────┬───────┘
+                                       │
+                                       ▼
+                                ┌──────────────┐
+                                │  PASO 1:     │
+                                │  Confirmar   │
+                                │  Datos Envío │
+                                └──────┬───────┘
+                                       │
+                                       ▼
+                                ┌──────────────┐
+                                │  PASO 2:     │
+                                │  Seleccionar │
+                                │  Método Pago │
+                                └──────┬───────┘
+                                       │
+                                       ▼
+                                ┌──────────────┐
+                                │  PASO 3:     │
+                                │  Confirmar   │
+                                │    Pedido    │
+                                └──────┬───────┘
+                                       │
+                                       ▼
+                           ╔═══════════════════╗
+                           ║   TRANSACCIÓN     ║
+                           ║═══════════════════║
+                           ║ 1. Crear Pedido   ║
+                           ║ 2. Reducir Stock  ║
+                           ║ 3. Procesar Pago  ║
+                           ║ 4. Actualizar     ║
+                           ║    Estado         ║
+                           ╚═══════┬═══════════╝
+                                   │
+                                   ▼
+                          ┌────────────────┐
+                          │ ¿Pago          │
+                          │ Exitoso?       │
+                          └────┬───────┬───┘
+                               │       │
+                           NO  │       │ SÍ
+                               │       │
+                               ▼       ▼
+                      ┌──────────┐  ┌──────────┐
+                      │ Revertir │  │ Mostrar  │
+                      │ Transacc.│  │ Confirm. │
+                      │ Mostrar  │  │  Pedido  │
+                      │  Error   │  │          │
+                      └─────┬────┘  └────┬─────┘
+                            │            │
+                            └────────────┘
+                                   │
+                                   ▼
+                                  FIN
+```
+
 ---
-## 1.6 Capa de Vistas (JSP/PrimeFaces)
+
+## 1.10 Diagrama de Arquitectura del Sistema
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        CLIENTE WEB                              │
+│                      (Navegador)                                │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ HTTP/HTTPS
+                           │
+┌──────────────────────────┴──────────────────────────────────────┐
+│                   SERVIDOR DE APLICACIONES                      │
+│                     (Tomcat Embebido)                           │
+│                                                                 │
+│  ┌───────────────────────────────────────────────────────────┐ │
+│  │              APLICACIÓN SPRING BOOT                       │ │
+│  │                                                           │ │
+│  │  ┌─────────────────────────────────────────────────┐     │ │
+│  │  │         CAPA DE PRESENTACIÓN                    │     │ │
+│  │  │  - JSF (PrimeFaces)                             │     │ │
+│  │  │  - Managed Beans                                │     │ │
+│  │  └───────────────┬─────────────────────────────────┘     │ │
+│  │                  │                                        │ │
+│  │  ┌───────────────▼─────────────────────────────────┐     │ │
+│  │  │         CAPA DE NEGOCIO                         │     │ │
+│  │  │  - Controllers (@Controller)                    │     │ │
+│  │  │  - Facades                                      │     │ │
+│  │  │  - Services (@Service)                          │     │ │
+│  │  │  - Lógica de Negocio                            │     │ │
+│  │  └───────────────┬─────────────────────────────────┘     │ │
+│  │                  │                                        │ │
+│  │  ┌───────────────▼─────────────────────────────────┐     │ │
+│  │  │         CAPA DE PERSISTENCIA                    │     │ │
+│  │  │  - DAOs / Repositories                          │     │ │
+│  │  │  - JPA/Hibernate                                │     │ │
+│  │  │  - @Transactional                               │     │ │
+│  │  └───────────────┬─────────────────────────────────┘     │ │
+│  │                  │                                        │ │
+│  └──────────────────┼────────────────────────────────────────┘ │
+│                     │                                          │
+│  ┌──────────────────▼────────────────────────────────────┐    │
+│  │           CONFIGURACIÓN SPRING                        │    │
+│  │  - application.properties                             │    │
+│  │  - Spring Security                                    │    │
+│  │  - DataSource Configuration                           │    │
+│  └───────────────────────────────────────────────────────┘    │
+└──────────────────────────┬──────────────────────────────────────┘
+                           │ JDBC
+                           │
+┌──────────────────────────▼──────────────────────────────────────┐
+│                    BASE DE DATOS                                │
+│               (MySQL / PostgreSQL)                              │
+│                                                                 │
+│  [Tabla: usuarios]  [Tabla: productos]                          │
+│  [Tabla: pedidos]   [Tabla: pagos]                              │
+│  [Tabla: items_carrito]                                         │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+
+
+---
+
+## 1.11 Relaciones entre Componentes
+
+| Componente Origen | Relación | Componente Destino |
+|------------------|----------|-------------------|
+| Vista (XHTML) | **usa** | Controller |
+| Controller | **delega a** | Facade |
+| Facade | **coordina** | Services |
+| Service | **utiliza** | DAO |
+| DAO | **accede** | Base de Datos |
+| Service | **gestiona** | Transacciones |
+| Controller | **mantiene** | Estado de Sesión |
+---
+## 1.12 Capa de Vistas (JSP/PrimeFaces)
 
 | Vista | Descripción |
 |-------|-------------|
