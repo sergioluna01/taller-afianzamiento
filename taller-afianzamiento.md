@@ -887,6 +887,368 @@ Rta:
 
 ---
 
+### 1.1 Capa de Entidades (JavaBeans)
+```
+┌─────────────────────┐
+│      Usuario        │
+├─────────────────────┤
+│ - id: Long          │
+│ - nombre: String    │
+│ - email: String     │
+│ - password: String  │
+│ - direccion: String │
+│ - telefono: String  │
+└─────────────────────┘
+
+┌─────────────────────┐
+│     Producto        │
+├─────────────────────┤
+│ - id: Long          │
+│ - nombre: String    │
+│ - descripcion:String│
+│ - precio: Double    │
+│ - stock: Integer    │
+│ - categoria: String │
+│ - activo: Boolean   │
+└─────────────────────┘
+
+┌─────────────────────┐
+│   ItemCarrito       │
+├─────────────────────┤
+│ - id: Long          │
+│ - producto: Producto│
+│ - cantidad: Integer │
+│ - subtotal: Double  │
+└─────────────────────┘
+
+┌─────────────────────┐
+│       Pedido        │
+├─────────────────────┤
+│ - id: Long          │
+│ - usuario: Usuario  │
+│ - fecha: Date       │
+│ - total: Double     │
+│ - estado: String    │
+└─────────────────────┘
+
+┌─────────────────────┐
+│       Pago          │
+├─────────────────────┤
+│ - id: Long          │
+│ - pedido: Pedido    │
+│ - metodoPago: String│
+│ - monto: Double     │
+│ - fechaPago: Date   │
+│ - estado: String    │
+└─────────────────────┘
+```
+
+### 1.2 Capa DAO
+```
+┌─────────────────────────┐
+│      UsuarioDAO         │
+├─────────────────────────┤
+│ + crear()               │
+│ + buscarPorId()         │
+│ + buscarPorEmail()      │
+│ + actualizar()          │
+│ + eliminar()            │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│     ProductoDAO         │
+├─────────────────────────┤
+│ + crear()               │
+│ + buscarPorId()         │
+│ + listarTodos()         │
+│ + buscarPorCategoria()  │
+│ + actualizarStock()     │
+│ + actualizar()          │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│      PedidoDAO          │
+├─────────────────────────┤
+│ + crear()               │
+│ + buscarPorId()         │
+│ + listarPorUsuario()    │
+│ + actualizarEstado()    │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│       PagoDAO           │
+├─────────────────────────┤
+│ + crear()               │
+│ + buscarPorPedido()     │
+│ + actualizar()          │
+└─────────────────────────┘
+```
+
+### 1.3 Capa de Services
+```
+┌─────────────────────────┐
+│    UsuarioService       │
+├─────────────────────────┤
+│ + registrarUsuario()    │
+│ + autenticar()          │
+│ + obtenerPerfil()       │
+│ + actualizarPerfil()    │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│   ProductoService       │
+├─────────────────────────┤
+│ + listarProductos()     │
+│ + buscarProducto()      │
+│ + verificarStock()      │
+│ + filtrarPorCategoria() │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│   InventarioService     │
+├─────────────────────────┤
+│ + verificarDisponibilidad()│
+│ + reservarStock()       │
+│ + liberarStock()        │
+│ + actualizarStock()     │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│     PedidoService       │
+├─────────────────────────┤
+│ + crearPedido()         │
+│ + consultarPedido()     │
+│ + listarPedidosUsuario()│
+│ + cambiarEstado()       │
+└─────────────────────────┘
+
+┌─────────────────────────┐
+│      PagoService        │
+├─────────────────────────┤
+│ + procesarPago()        │
+│ + validarPago()         │
+│ + consultarEstadoPago() │
+└─────────────────────────┘
+```
+
+### 1.4 Capa Facade
+```
+┌─────────────────────────────────┐
+│      EcommerceFacade            │
+├─────────────────────────────────┤
+│ - productoService               │
+│ - inventarioService             │
+│ - pedidoService                 │
+│ - pagoService                   │
+├─────────────────────────────────┤
+│ + procesarCompra()              │
+│ + gestionarCarritoYCheckout()  │
+│ + validarYConfirmarPedido()    │
+└─────────────────────────────────┘
+```
+
+### 1.5 Capa Controllers
+```
+┌─────────────────────────┐
+│   LoginController       │
+├─────────────────────────┤
+│ + login()               │
+│ + logout()              │
+│ + validarSesion()       │
+└─────────────────────────┘
+
+┌──────────────────────────────┐
+│ ProductoCatalogoController   │
+├──────────────────────────────┤
+│ + listarProductos()          │
+│ + buscarProductos()          │
+│ + filtrarPorCategoria()      │
+│ + verDetalle()               │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│  CarritoComprasController    │
+├──────────────────────────────┤
+│ + agregarProducto()          │
+│ + removerProducto()          │
+│ + actualizarCantidad()       │
+│ + vaciarCarrito()            │
+│ + calcularTotal()            │
+└──────────────────────────────┘
+
+┌──────────────────────────────┐
+│ CheckoutMultipasoController  │
+├──────────────────────────────┤
+│ + confirmarDatos()           │
+│ + seleccionarMetodoPago()    │
+│ + procesarPago()             │
+│ + confirmarPedido()          │
+└──────────────────────────────┘
+```
+---
+## 1.6 Capa de Vistas (JSP/PrimeFaces)
+```
+| Vista | Descripción |
+|-------|-------------|
+| **login.xhtml** | Formulario de autenticación |
+| **catalogo.xhtml** | Listado de productos con filtros |
+| **detalleProducto.xhtml** | Información detallada del producto |
+| **carrito.xhtml** | Vista del carrito de compras |
+| **checkout-paso1.xhtml** | Confirmación de datos de envío |
+| **checkout-paso2.xhtml** | Selección de método de pago |
+| **checkout-paso3.xhtml** | Confirmación del pedido |
+| **confirmacion.xhtml** | Página de confirmación de compra |
+```
+---
+
+### 2. Scopes de cada Managed Bean:
+
+-LoginController: @SessionScoped - Se mantiene durante toda la sesión del usuario autenticado.
+
+-ProductoCatalogoController: @ViewScoped - Se mantiene mientras el usuario navega en el catálogo.
+
+-CarritoComprasController: @SessionScoped - El carrito debe persistir durante toda la sesión de compra.
+
+-CheckoutMultipasoController: @SessionScoped - Debe mantener el estado entre los diferentes pasos del proceso de compra.
+
+---
+
+## 3. Puntos donde se requieren transacciones
+
+### Operaciones Transaccionales Críticas:
+
+- **Proceso de Compra Completo**
+  - Crear el pedido
+  - Reducir el stock de productos
+  - Registrar el pago
+  - Actualizar estado del pedido
+  - *Justificación:* Si falla alguna operación, todo debe revertirse para mantener la consistencia
+
+- **Agregar Producto al Carrito (con reserva de stock)**
+  - Verificar disponibilidad
+  - Reservar temporalmente el stock
+  - *Justificación:* Evitar ventas duplicadas del mismo producto
+
+- **Procesamiento de Pago**
+  - Validar método de pago
+  - Registrar transacción
+  - Actualizar estado del pedido
+  - *Justificación:* Garantizar que el pago y el pedido estén sincronizados
+
+- **Cancelación de Pedido**
+  - Cambiar estado del pedido
+  - Liberar stock reservado
+  - Revertir pago (si aplica)
+  - *Justificación:* Mantener la integridad del inventario
+
+- **Actualización de Inventario**
+  - Modificar stock
+  - Registrar movimiento
+  - *Justificación:* Mantener trazabilidad y consistencia del inventario
+
+---
+## 4. Transición a tecnologías modernas
+
+### 4.1 Cambios al migrar a Spring Boot
+
+**Configuración:**
+- De `web.xml` y `faces-config.xml` → `application.properties` / `application.yml`
+- De descriptores XML → Anotaciones (`@Configuration`, `@Bean`)
+
+**Inyección de Dependencias:**
+- De `@ManagedBean` → `@Controller` / `@RestController`
+- De `@ManagedProperty` → `@Autowired` / `@Inject`
+- De CDI beans → Spring Beans
+
+**Persistencia:**
+- De EntityManager manual → Spring Data JPA con repositorios
+- De `persistence.xml` → Configuración en `application.properties`
+- Implementar interfaces `JpaRepository` en lugar de DAOs manuales
+
+**Transacciones:**
+- De transacciones manuales → `@Transactional` de Spring
+- Gestión automática de transacciones
+
+**Seguridad:**
+- Integrar Spring Security para autenticación y autorización
+- Reemplazar sesiones manuales con filtros de seguridad
+
+**Servidor:**
+- De servidor externo (Tomcat, Glassfish) → Servidor embebido
+- Aplicación ejecutable con `java -jar`
+
+---
+
+### 4.2 Componentes PrimeFaces para el Catálogo
+
+**Para el listado de productos:**
+```xml
+ - Vista de productos lista
+ - Diseño en cuadrícula de productos
+ - Galería de imágenes destacadas
+```
+
+**Para filtros y búsqueda:**
+```xml
+ - Búsqueda predictiva de productos
+ - Selector de categorías
+ - Filtro de rango de precios
+```
+
+**Para detalles del producto:**
+```xml
+ - Imágenes del producto
+ - Calificación del producto
+ - Selector de cantidad
+```
+
+**Componentes generales:**
+```xml
+ - Contenedor de información
+ - Botones de acción
+ - Notificaciones al usuario
+ - Modal para vista rápida del producto
+```
+
+---
+
+### 4.3 Implementación del Carrito con AJAX de PrimeFaces
+
+**Agregar producto al carrito:**
+
+Se usa `p:commandButton` con AJAX para agregar productos sin recargar la página:
+- Atributo `action`: invoca el método del controller
+- Atributo `update`: especifica los componentes a actualizar
+- Atributo `ajax="true"`: habilita la actualización asíncrona
+
+**Actualizar cantidad en el carrito:**
+
+Se utiliza `p:spinner` con evento AJAX en el cambio:
+- Permite modificar la cantidad con controles + y -
+- Define mínimo y máximo según stock disponible
+- El evento `change` actualiza automáticamente subtotal y total
+
+**Remover producto del carrito:**
+
+Botón con confirmación antes de eliminar:
+- Usa `p:commandButton` con ícono de papelera
+- Incluye diálogo de confirmación con `p:confirm`
+- Actualiza la tabla del carrito y el total al confirmar
+
+**Panel del carrito (actualización dinámica):**
+
+Se envuelve en `p:outputPanel` para actualización AJAX:
+- Muestra badge con cantidad de items
+- Muestra el total actualizado
+- Se actualiza cuando se agregan/remueven productos
+
+**Ventajas del uso de AJAX:**
+- Sin recargas completas de página
+- Actualización instantánea del total
+- Mejor experiencia de usuario
+- Validación en tiempo real del stock
+- Notificaciones inmediatas con `p:growl` o `p:messages`
+
 ## RECURSOS COMPLEMENTARIOS
 
 ### Para profundizar en PrimeFaces:
